@@ -65,6 +65,11 @@ const processRenderer = async (element: Element): Promise<void> => {
 
   const videoId = getVideoIdFromElement(root);
   const channelId = getChannelIdFromElement(root);
+  const sourceConfidence: "high" | "medium" | "low" = channelId
+    ? "high"
+    : videoId
+      ? "medium"
+      : "low";
 
   // Ignore non-video cards that do not carry enough signal yet.
   if (!title && !href && !videoId) {
@@ -78,7 +83,8 @@ const processRenderer = async (element: Element): Promise<void> => {
     channelName,
     url: href,
     channelUrl,
-    videoId
+    videoId,
+    sourceConfidence
   });
 };
 

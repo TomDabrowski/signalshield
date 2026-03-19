@@ -100,6 +100,30 @@ test("allows own-channel uploads that match an own video", () => {
   assert.equal(result.action, "allow");
 });
 
+test("protects likely own videos on youtube when channel detection is missing", () => {
+  const result = evaluateCandidate(
+    youtubeCandidate({
+      channelId: "",
+      title: "My Cinematic Launch Trailer 2026",
+      videoId: "abc123",
+      sourceConfidence: "low"
+    }),
+    makeRules({
+      ownChannels: ["UC_OWN"],
+      ownVideos: [
+        {
+          title: "My Cinematic Launch Trailer 2026",
+          videoId: "abc123"
+        }
+      ],
+      blockTitlePatterns: ["trailer"]
+    })
+  );
+
+  assert.equal(result.action, "allow");
+  assert.match(result.reasons.join(" "), /protected likely own video/i);
+});
+
 test("hides channels not on the allowlist when strict channel mode is enabled", () => {
   const result = evaluateCandidate(
     youtubeCandidate({ channelId: "UC_SOMEONE_ELSE" }),

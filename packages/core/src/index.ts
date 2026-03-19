@@ -33,6 +33,7 @@ export interface ContentCandidate {
   url?: string;
   channelUrl?: string;
   videoId?: string;
+  sourceConfidence?: "high" | "medium" | "low";
 }
 
 export interface EvaluationResult {
@@ -220,6 +221,18 @@ export const evaluateCandidate = (
 
   const matchedOwnVideo = findMatchingOwnVideo(candidate, rules.ownVideos ?? []);
   if (matchedOwnVideo) {
+    const missingChannelSignal = !channelId;
+    const weakOwnSignal =
+      candidate.surface === "youtube" &&
+      (missingChannelSignal || candidate.sourceConfidence === "low");
+
+    if (weakOwnSignal) {
+      return {
+        action: "allow",
+        reasons: [`protected likely own video "${matchedOwnVideo.title}"`]
+      };
+    }
+
     if (ownChannels.has(channelId)) {
       return {
         action: "allow",
