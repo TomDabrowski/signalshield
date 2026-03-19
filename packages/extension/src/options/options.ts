@@ -10,7 +10,9 @@ import {
   normalizeChannelIdentifiers,
   setStoredRules
 } from "../lib/rules";
+import { dedupeVideoSeeds, importPublicChannelVideos } from "../lib/youtube-public";
 
+const publicChannelImportField = document.querySelector<HTMLInputElement>("#publicChannelImport");
 const ownChannelsField = document.querySelector<HTMLTextAreaElement>("#ownChannels");
 const allowChannelsField = document.querySelector<HTMLTextAreaElement>("#allowChannels");
 const ownVideosField = document.querySelector<HTMLTextAreaElement>("#ownVideos");
@@ -36,6 +38,7 @@ const statusField = document.querySelector<HTMLElement>("#status");
 const form = document.querySelector<HTMLFormElement>("#rules-form");
 const exportButton = document.querySelector<HTMLButtonElement>("#exportRules");
 const addExceptionButton = document.querySelector<HTMLButtonElement>("#addException");
+const importPublicChannelButton = document.querySelector<HTMLButtonElement>("#importPublicChannel");
 const importDefaultsButton = document.querySelector<HTMLButtonElement>("#importDefaults");
 const importRulesFileField = document.querySelector<HTMLInputElement>("#importRulesFile");
 
@@ -363,6 +366,33 @@ importRulesFileField?.addEventListener("change", async (event) => {
     setStatus(error instanceof Error ? error.message : "Import failed");
   } finally {
     importRulesFileField.value = "";
+  }
+});
+
+importPublicChannelButton?.addEventListener("click", async () => {
+  const channelInput = publicChannelImportField?.value ?? "";
+
+  try {
+    const result = await importPublicChannelVideos(channelInput);
+    const existingOwnChannels = normalizeChannelIdentifiers(toLines(ownChannelsField?.value ?? ""));
+    const existingOwnVideos = parseOwnVideos(ownVideosField?.value ?? "");
+
+    const mergedOwnChannels = normalizeChannelIdentifiers([
+      ...existingOwnChannels,
+      result.channelId
+    ]);
+    const mergedOwnVideos = dedupeVideoSeeds([...existingOwnVideos, ...result.videos]);
+
+    if (ownChannelsField) {
+      ownChannelsField.value = mergedOwnChannels.join("\n");
+    }
+
+    currentOwnVideos = mergedOwnVideos;
+    syncOwnVideosField();
+
+    setStatus(`Imported ${result.videos.length} public videos from ${result.channelId}`);
+  } catch (error) {
+    setStatus(error instanceof Error ? error.message : "Public channel import failed");
   }
 });
 

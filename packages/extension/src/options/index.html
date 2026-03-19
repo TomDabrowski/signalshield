@@ -12,6 +12,25 @@
         <h1>SignalShield</h1>
         <p>Desktop-first filtering for YouTube and Google Search.</p>
         <form id="rules-form">
+          <section class="exceptions-panel" aria-labelledby="publicImportTitle">
+            <div class="section-copy">
+              <h2 id="publicImportTitle">Public channel import</h2>
+              <p>Import public uploads from a YouTube channel without OAuth.</p>
+            </div>
+            <div class="exception-builder">
+              <label>
+                Channel handle or URL
+                <input
+                  id="publicChannelImport"
+                  type="text"
+                  placeholder="@tomdabrowskimusic or https://www.youtube.com/@tomdabrowskimusic"
+                />
+              </label>
+              <button id="importPublicChannel" type="button" class="secondary">
+                Import public videos
+              </button>
+            </div>
+          </section>
           <label>
             My channel identifiers
             <textarea id="ownChannels" rows="4" placeholder="UC... IDs, @handles, or full channel URLs, one per line"></textarea>
