@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SignalShield Settings</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="page">
+      <section class="panel">
+        <h1>SignalShield</h1>
+        <p>Desktop-first filtering for YouTube and Google Search.</p>
+        <form id="rules-form">
+          <label>
+            My channel identifiers
+            <textarea id="ownChannels" rows="4" placeholder="UC... IDs, @handles, or full channel URLs, one per line"></textarea>
+          </label>
+          <label>
+            Always allowed channel identifiers
+            <textarea id="allowChannels" rows="6" placeholder="One UC... ID, @handle, or full channel URL per line"></textarea>
+          </label>
+          <label>
+            My videos (JSON)
+            <textarea
+              id="ownVideos"
+              rows="8"
+              placeholder='[{"title":"My Trailer","aliases":["my trailer reupload"],"videoId":"abc123"}]'
+            ></textarea>
+          </label>
+          <label>
+            Block channel patterns
+            <textarea id="blockChannelPatterns" rows="4" placeholder="One pattern per line"></textarea>
+          </label>
+          <label>
+            Block title patterns
+            <textarea id="blockTitlePatterns" rows="6" placeholder="One pattern per line"></textarea>
+          </label>
+          <label>
+            Exceptions (JSON)
+            <textarea
+              id="exceptions"
+              rows="8"
+              placeholder='[{"name":"Own trailer","queryContains":"my trailer","allowOnlyChannels":["UC_MY_CHANNEL"]}]'
+            ></textarea>
+          </label>
+          <section class="exceptions-panel" aria-labelledby="exceptionBuilderTitle">
+            <div class="section-copy">
+              <h2 id="exceptionBuilderTitle">Guided exceptions</h2>
+              <p>Add query-specific allow rules without hand-editing JSON.</p>
+            </div>
+            <div class="exception-builder">
+              <label>
+                Name
+                <input id="exceptionName" type="text" placeholder="Own trailer" />
+              </label>
+              <label>
+                Query contains
+                <input id="exceptionQuery" type="text" placeholder="my trailer title" />
+              </label>
+              <label>
+                Title contains
+                <input id="exceptionTitle" type="text" placeholder="official trailer cover" />
+              </label>
+              <label>
+                Allow channels
+                <textarea
+                  id="exceptionAllowChannels"
+                  rows="3"
+                  placeholder="One UC... ID, @handle, or full channel URL per line"
+                ></textarea>
+              </label>
+              <label class="checkbox">
+                <input id="exceptionAllowOwnChannels" type="checkbox" />
+                Allow my own channels when this exception matches
+              </label>
+              <button id="addException" type="button" class="secondary">Add exception</button>
+            </div>
+            <div id="exceptionList" class="exception-list"></div>
+          </section>
+          <label class="checkbox">
+            <input id="blockIfChannelNotAllowed" type="checkbox" />
+            Hide content when the channel is not on the allowlist
+          </label>
+          <div class="actions">
+            <button type="submit">Save rules</button>
+            <button id="exportRules" type="button" class="secondary">Export JSON</button>
+            <label class="file-button secondary" for="importRulesFile">Import JSON file</label>
+            <input id="importRulesFile" type="file" accept="application/json" hidden />
+            <button id="importDefaults" type="button" class="secondary">Load defaults</button>
+          </div>
+          <p id="status" aria-live="polite"></p>
+        </form>
+      </section>
+    </main>
+    <script type="module" src="./options.ts"></script>
+  </body>
+  </html>
