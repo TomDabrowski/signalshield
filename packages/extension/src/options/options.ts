@@ -10,6 +10,7 @@ import {
   normalizeChannelIdentifiers,
   setStoredRules
 } from "../lib/rules";
+import { applyAggressivePreset } from "../lib/presets";
 import { dedupeVideoSeeds, importPublicChannelVideos } from "../lib/youtube-public";
 
 const publicChannelImportField = document.querySelector<HTMLInputElement>("#publicChannelImport");
@@ -37,6 +38,10 @@ const blockIfChannelNotAllowedField = document.querySelector<HTMLInputElement>(
 );
 const statusField = document.querySelector<HTMLElement>("#status");
 const form = document.querySelector<HTMLFormElement>("#rules-form");
+const applyAggressivePresetButton =
+  document.querySelector<HTMLButtonElement>("#applyAggressivePreset");
+const downloadRulesBackupButton =
+  document.querySelector<HTMLButtonElement>("#downloadRulesBackup");
 const exportButton = document.querySelector<HTMLButtonElement>("#exportRules");
 const addExceptionButton = document.querySelector<HTMLButtonElement>("#addException");
 const importPublicChannelButton = document.querySelector<HTMLButtonElement>("#importPublicChannel");
@@ -239,6 +244,16 @@ const saveRules = async (): Promise<void> => {
   renderExceptionList();
 };
 
+const downloadTextFile = (filename: string, contents: string): void => {
+  const blob = new Blob([contents], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+};
+
 const load = async (): Promise<void> => {
   const rules = await getStoredRules();
   renderRules(rules);
@@ -269,6 +284,20 @@ exportButton?.addEventListener("click", async () => {
 importDefaultsButton?.addEventListener("click", async () => {
   renderRules(defaultRules);
   setStatus("Default rules loaded into the form");
+});
+
+applyAggressivePresetButton?.addEventListener("click", async () => {
+  const currentRules = collectRules();
+  const presetRules = applyAggressivePreset(currentRules);
+  renderRules(presetRules);
+  setStatus("Aggressive preset applied to the form");
+});
+
+downloadRulesBackupButton?.addEventListener("click", async () => {
+  const rules = collectRules();
+  const date = new Date().toISOString().slice(0, 10);
+  downloadTextFile(`signalshield-rules-${date}.json`, stringifyJson(rules));
+  setStatus("Local rules backup downloaded");
 });
 
 addExceptionButton?.addEventListener("click", () => {
