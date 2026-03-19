@@ -36,7 +36,9 @@ const buildScripts = async () => {
 
 const copyStaticAssets = async () => {
   await ensureDir(path.join(distSrcDir, "options"));
-  await cp(path.join(optionsSrcDir, "index.html"), path.join(distSrcDir, "options", "index.html"));
+  const rawHtml = await readFile(path.join(optionsSrcDir, "index.html"), "utf8");
+  const builtHtml = rawHtml.replace(/src="\.\/options\.ts"/g, 'src="./options.js"');
+  await writeFile(path.join(distSrcDir, "options", "index.html"), builtHtml);
   await cp(path.join(optionsSrcDir, "styles.css"), path.join(distSrcDir, "options", "styles.css"));
 };
 
