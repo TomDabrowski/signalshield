@@ -8,76 +8,133 @@
   </head>
   <body>
     <main class="page">
-      <section class="panel">
-        <h1>SignalShield</h1>
-        <p>Desktop-first filtering for YouTube and Google Search.</p>
+      <section class="panel shell">
+        <header class="hero">
+          <div class="hero__badge">Creator filter lab</div>
+          <div class="hero__copy">
+            <h1>SignalShield</h1>
+            <p>Shape a stricter YouTube and Google view around your own uploads, trusted channels, and aggressive filter rules.</p>
+          </div>
+          <div class="hero__meta">
+            <div class="meta-card">
+              <span class="meta-card__label">Mode</span>
+              <strong>Desktop-first</strong>
+            </div>
+            <div class="meta-card">
+              <span class="meta-card__label">Storage</span>
+              <strong>Local rules</strong>
+            </div>
+          </div>
+        </header>
+
         <form id="rules-form">
-          <section class="exceptions-panel" aria-labelledby="presetTitle">
-            <div class="section-copy">
-              <h2 id="presetTitle">Presets and backup</h2>
-              <p>Apply a stronger filter baseline and download your local rules for another device.</p>
-            </div>
-            <div class="actions">
-              <button id="applyAggressivePreset" type="button" class="secondary">
-                Apply aggressive preset
-              </button>
-              <button id="downloadRulesBackup" type="button" class="secondary">
-                Download local backup
-              </button>
-            </div>
+          <section class="feature-grid">
+            <section class="exceptions-panel" aria-labelledby="presetTitle">
+              <div class="section-copy">
+                <h2 id="presetTitle">Presets and backup</h2>
+                <p>Apply a stronger filter baseline and download your local rules for another device.</p>
+              </div>
+              <div class="actions">
+                <button id="applyAggressivePreset" type="button" class="secondary">
+                  Apply aggressive preset
+                </button>
+                <button id="downloadRulesBackup" type="button" class="secondary">
+                  Download local backup
+                </button>
+              </div>
+            </section>
+
+            <section class="exceptions-panel" aria-labelledby="publicImportTitle">
+              <div class="section-copy">
+                <h2 id="publicImportTitle">Public channel import</h2>
+                <p>Import public uploads from a YouTube channel without OAuth.</p>
+              </div>
+              <div class="exception-builder">
+                <label>
+                  Channel handle or URL
+                  <input
+                    id="publicChannelImport"
+                    type="text"
+                    placeholder="@tomdabrowskimusic or https://www.youtube.com/@tomdabrowskimusic"
+                  />
+                </label>
+                <button id="importPublicChannel" type="button" class="secondary">
+                  Import public videos
+                </button>
+                <div id="publicImportStatus" class="import-status" aria-live="polite"></div>
+              </div>
+            </section>
           </section>
-          <section class="exceptions-panel" aria-labelledby="publicImportTitle">
-            <div class="section-copy">
-              <h2 id="publicImportTitle">Public channel import</h2>
-              <p>Import public uploads from a YouTube channel without OAuth.</p>
-            </div>
-            <div class="exception-builder">
+
+          <section class="config-grid">
+            <section class="field-card">
+              <div class="section-copy">
+                <h2>Ownership</h2>
+                <p>Define your own channel signals and imported video seeds.</p>
+              </div>
               <label>
-                Channel handle or URL
-                <input
-                  id="publicChannelImport"
-                  type="text"
-                  placeholder="@tomdabrowskimusic or https://www.youtube.com/@tomdabrowskimusic"
-                />
+                My channel identifiers
+                <textarea id="ownChannels" rows="4" placeholder="UC... IDs, @handles, or full channel URLs, one per line"></textarea>
               </label>
-              <button id="importPublicChannel" type="button" class="secondary">
-                Import public videos
-              </button>
-              <div id="publicImportStatus" class="import-status" aria-live="polite"></div>
-            </div>
+              <label>
+                My videos (JSON)
+                <textarea
+                  id="ownVideos"
+                  rows="8"
+                  placeholder='[{"title":"My Trailer","aliases":["my trailer reupload"],"videoId":"abc123"}]'
+                ></textarea>
+              </label>
+            </section>
+
+            <section class="field-card">
+              <div class="section-copy">
+                <h2>Allowlist</h2>
+                <p>Channels that should survive otherwise aggressive filtering.</p>
+              </div>
+              <label>
+                Always allowed channel identifiers
+                <textarea id="allowChannels" rows="6" placeholder="One UC... ID, @handle, or full channel URL per line"></textarea>
+              </label>
+              <label class="checkbox checkbox--card">
+                <input id="blockIfChannelNotAllowed" type="checkbox" />
+                <span>
+                  <strong>Strict channel mode</strong>
+                  <small>Hide content when the channel is not on the allowlist.</small>
+                </span>
+              </label>
+            </section>
+
+            <section class="field-card">
+              <div class="section-copy">
+                <h2>Blocking</h2>
+                <p>Keyword-driven filters for titles and channel names.</p>
+              </div>
+              <label>
+                Block channel patterns
+                <textarea id="blockChannelPatterns" rows="4" placeholder="One pattern per line"></textarea>
+              </label>
+              <label>
+                Block title patterns
+                <textarea id="blockTitlePatterns" rows="6" placeholder="One pattern per line"></textarea>
+              </label>
+            </section>
+
+            <section class="field-card">
+              <div class="section-copy">
+                <h2>Raw rules</h2>
+                <p>Import, export, or directly adjust the lower-level exception data.</p>
+              </div>
+              <label>
+                Exceptions (JSON)
+                <textarea
+                  id="exceptions"
+                  rows="8"
+                  placeholder='[{"name":"Own trailer","queryContains":"my trailer","allowOnlyChannels":["UC_MY_CHANNEL"]}]'
+                ></textarea>
+              </label>
+            </section>
           </section>
-          <label>
-            My channel identifiers
-            <textarea id="ownChannels" rows="4" placeholder="UC... IDs, @handles, or full channel URLs, one per line"></textarea>
-          </label>
-          <label>
-            Always allowed channel identifiers
-            <textarea id="allowChannels" rows="6" placeholder="One UC... ID, @handle, or full channel URL per line"></textarea>
-          </label>
-          <label>
-            My videos (JSON)
-            <textarea
-              id="ownVideos"
-              rows="8"
-              placeholder='[{"title":"My Trailer","aliases":["my trailer reupload"],"videoId":"abc123"}]'
-            ></textarea>
-          </label>
-          <label>
-            Block channel patterns
-            <textarea id="blockChannelPatterns" rows="4" placeholder="One pattern per line"></textarea>
-          </label>
-          <label>
-            Block title patterns
-            <textarea id="blockTitlePatterns" rows="6" placeholder="One pattern per line"></textarea>
-          </label>
-          <label>
-            Exceptions (JSON)
-            <textarea
-              id="exceptions"
-              rows="8"
-              placeholder='[{"name":"Own trailer","queryContains":"my trailer","allowOnlyChannels":["UC_MY_CHANNEL"]}]'
-            ></textarea>
-          </label>
+
           <section class="exceptions-panel" aria-labelledby="exceptionBuilderTitle">
             <div class="section-copy">
               <h2 id="exceptionBuilderTitle">Guided exceptions</h2>
@@ -112,18 +169,17 @@
             </div>
             <div id="exceptionList" class="exception-list"></div>
           </section>
-          <label class="checkbox">
-            <input id="blockIfChannelNotAllowed" type="checkbox" />
-            Hide content when the channel is not on the allowlist
-          </label>
-          <div class="actions">
-            <button type="submit">Save rules</button>
-            <button id="exportRules" type="button" class="secondary">Export JSON</button>
-            <label class="file-button secondary" for="importRulesFile">Import JSON file</label>
-            <input id="importRulesFile" type="file" accept="application/json" hidden />
-            <button id="importDefaults" type="button" class="secondary">Load defaults</button>
-          </div>
-          <p id="status" aria-live="polite"></p>
+
+          <footer class="footer-bar">
+            <div class="actions">
+              <button type="submit">Save rules</button>
+              <button id="exportRules" type="button" class="secondary">Export JSON</button>
+              <label class="file-button secondary" for="importRulesFile">Import JSON file</label>
+              <input id="importRulesFile" type="file" accept="application/json" hidden />
+              <button id="importDefaults" type="button" class="secondary">Load defaults</button>
+            </div>
+            <p id="status" class="status-pill" aria-live="polite"></p>
+          </footer>
         </form>
       </section>
     </main>
