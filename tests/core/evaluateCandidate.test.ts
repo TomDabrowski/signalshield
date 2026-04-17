@@ -31,6 +31,23 @@ test("allows own channels immediately", () => {
   assert.match(result.reasons.join(" "), /own or allowed channel/i);
 });
 
+test("allows videos on an own channel page even when the card signal is weak", () => {
+  const result = evaluateCandidate(
+    youtubeCandidate({
+      channelId: "@exampleartist",
+      pageChannelSignals: ["UC_OWN", "@exampleartist"],
+      title: "My orchestral cover"
+    }),
+    makeRules({
+      ownChannels: ["UC_OWN"],
+      blockTitlePatterns: ["cover", "orchestral cover"]
+    })
+  );
+
+  assert.equal(result.action, "allow");
+  assert.match(result.reasons.join(" "), /own or allowed channel page/i);
+});
+
 test("hides blocked title patterns", () => {
   const result = evaluateCandidate(
     youtubeCandidate({ title: "Amazing trailer cover version" }),
@@ -98,6 +115,54 @@ test("allows own-channel uploads that match an own video", () => {
   );
 
   assert.equal(result.action, "allow");
+});
+
+test("protects likely own videos on youtube when channel detection is missing", () => {
+  const result = evaluateCandidate(
+    youtubeCandidate({
+      channelId: "",
+      title: "My Cinematic Launch Trailer 2026",
+      videoId: "abc123",
+      sourceConfidence: "low"
+    }),
+    makeRules({
+      ownChannels: ["UC_OWN"],
+      ownVideos: [
+        {
+          title: "My Cinematic Launch Trailer 2026",
+          videoId: "abc123"
+        }
+      ],
+      blockTitlePatterns: ["trailer"]
+    })
+  );
+
+  assert.equal(result.action, "allow");
+  assert.match(result.reasons.join(" "), /protected likely own video/i);
+});
+
+test("protects likely own videos on youtube when channel signal is only medium confidence", () => {
+  const result = evaluateCandidate(
+    youtubeCandidate({
+      channelId: "@exampleartist",
+      title: "My Cinematic Launch Trailer 2026",
+      videoId: "abc123",
+      sourceConfidence: "medium"
+    }),
+    makeRules({
+      ownChannels: ["UC_OWN"],
+      ownVideos: [
+        {
+          title: "My Cinematic Launch Trailer 2026",
+          videoId: "abc123"
+        }
+      ],
+      blockTitlePatterns: ["trailer"]
+    })
+  );
+
+  assert.equal(result.action, "allow");
+  assert.match(result.reasons.join(" "), /protected likely own video/i);
 });
 
 test("hides channels not on the allowlist when strict channel mode is enabled", () => {

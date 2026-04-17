@@ -1,6 +1,8 @@
 import {
   evaluateAndHide,
   extractText,
+  getCurrentYouTubeChannelId,
+  getCurrentYouTubeChannelSignals,
   getChannelIdFromElement,
   getVideoIdFromElement
 } from "./shared";
@@ -30,6 +32,9 @@ const resolveRendererRoot = (element: Element): Element => {
 
 const processRenderer = async (element: Element): Promise<void> => {
   const root = resolveRendererRoot(element);
+  const pageChannelId = getCurrentYouTubeChannelId();
+  const pageChannelSignals = getCurrentYouTubeChannelSignals();
+  const elementChannelId = getChannelIdFromElement(root);
 
   if (root.getAttribute("data-signalshield-processed") === "true") {
     return;
@@ -64,7 +69,14 @@ const processRenderer = async (element: Element): Promise<void> => {
     root.querySelector<HTMLAnchorElement>("ytd-channel-name a")?.href;
 
   const videoId = getVideoIdFromElement(root);
-  const channelId = getChannelIdFromElement(root);
+  const channelId = elementChannelId ?? pageChannelId;
+  const sourceConfidence: "high" | "medium" | "low" = elementChannelId
+    ? "high"
+    : pageChannelId
+      ? "medium"
+      : videoId
+      ? "medium"
+      : "low";
 
   // Ignore non-video cards that do not carry enough signal yet.
   if (!title && !href && !videoId) {
@@ -74,11 +86,13 @@ const processRenderer = async (element: Element): Promise<void> => {
   await evaluateAndHide(root, {
     surface: "youtube",
     channelId,
+    pageChannelSignals,
     title,
     channelName,
     url: href,
     channelUrl,
-    videoId
+    videoId,
+    sourceConfidence
   });
 };
 

@@ -10,7 +10,11 @@ import {
   normalizeChannelIdentifiers,
   setStoredRules
 } from "../lib/rules";
+import { applyAggressivePreset } from "../lib/presets";
+import { dedupeVideoSeeds, importPublicChannelVideos } from "../lib/youtube-public";
 
+const publicChannelImportField = document.querySelector<HTMLInputElement>("#publicChannelImport");
+const publicImportStatusField = document.querySelector<HTMLElement>("#publicImportStatus");
 const ownChannelsField = document.querySelector<HTMLTextAreaElement>("#ownChannels");
 const allowChannelsField = document.querySelector<HTMLTextAreaElement>("#allowChannels");
 const ownVideosField = document.querySelector<HTMLTextAreaElement>("#ownVideos");
@@ -34,8 +38,13 @@ const blockIfChannelNotAllowedField = document.querySelector<HTMLInputElement>(
 );
 const statusField = document.querySelector<HTMLElement>("#status");
 const form = document.querySelector<HTMLFormElement>("#rules-form");
+const applyAggressivePresetButton =
+  document.querySelector<HTMLButtonElement>("#applyAggressivePreset");
+const downloadRulesBackupButton =
+  document.querySelector<HTMLButtonElement>("#downloadRulesBackup");
 const exportButton = document.querySelector<HTMLButtonElement>("#exportRules");
 const addExceptionButton = document.querySelector<HTMLButtonElement>("#addException");
+const importPublicChannelButton = document.querySelector<HTMLButtonElement>("#importPublicChannel");
 const importDefaultsButton = document.querySelector<HTMLButtonElement>("#importDefaults");
 const importRulesFileField = document.querySelector<HTMLInputElement>("#importRulesFile");
 
@@ -52,6 +61,18 @@ const setStatus = (value: string): void => {
   if (statusField) {
     statusField.textContent = value;
   }
+};
+
+const setPublicImportStatus = (
+  value: string,
+  state: "idle" | "loading" | "success" | "error" = "idle"
+): void => {
+  if (!publicImportStatusField) {
+    return;
+  }
+
+  publicImportStatusField.textContent = value;
+  publicImportStatusField.dataset.state = state;
 };
 
 const stringifyJson = (value: unknown): string => JSON.stringify(value, null, 2);
@@ -223,6 +244,16 @@ const saveRules = async (): Promise<void> => {
   renderExceptionList();
 };
 
+const downloadTextFile = (filename: string, contents: string): void => {
+  const blob = new Blob([contents], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+};
+
 const load = async (): Promise<void> => {
   const rules = await getStoredRules();
   renderRules(rules);
@@ -253,6 +284,20 @@ exportButton?.addEventListener("click", async () => {
 importDefaultsButton?.addEventListener("click", async () => {
   renderRules(defaultRules);
   setStatus("Default rules loaded into the form");
+});
+
+applyAggressivePresetButton?.addEventListener("click", async () => {
+  const currentRules = collectRules();
+  const presetRules = applyAggressivePreset(currentRules);
+  renderRules(presetRules);
+  setStatus("Aggressive preset applied to the form");
+});
+
+downloadRulesBackupButton?.addEventListener("click", async () => {
+  const rules = collectRules();
+  const date = new Date().toISOString().slice(0, 10);
+  downloadTextFile(`signalshield-rules-${date}.json`, stringifyJson(rules));
+  setStatus("Local rules backup downloaded");
 });
 
 addExceptionButton?.addEventListener("click", () => {
@@ -363,6 +408,52 @@ importRulesFileField?.addEventListener("change", async (event) => {
     setStatus(error instanceof Error ? error.message : "Import failed");
   } finally {
     importRulesFileField.value = "";
+  }
+});
+
+importPublicChannelButton?.addEventListener("click", async () => {
+  const channelInput = publicChannelImportField?.value ?? "";
+  if (!channelInput.trim()) {
+    setPublicImportStatus("Enter a channel handle or URL first", "error");
+    setStatus("Enter a channel handle or URL first");
+    return;
+  }
+
+  if (importPublicChannelButton) {
+    importPublicChannelButton.disabled = true;
+  }
+
+  try {
+    setPublicImportStatus("Resolving public channel...", "loading");
+    const result = await importPublicChannelVideos(channelInput);
+    setPublicImportStatus(`Loaded ${result.videos.length} public videos`, "success");
+    const existingOwnChannels = normalizeChannelIdentifiers(toLines(ownChannelsField?.value ?? ""));
+    const existingOwnVideos = parseOwnVideos(ownVideosField?.value ?? "");
+
+    const mergedOwnChannels = normalizeChannelIdentifiers([
+      ...existingOwnChannels,
+      result.channelId
+    ]);
+    const mergedOwnVideos = dedupeVideoSeeds([...existingOwnVideos, ...result.videos]);
+
+    if (ownChannelsField) {
+      ownChannelsField.value = mergedOwnChannels.join("\n");
+    }
+
+    currentOwnVideos = mergedOwnVideos;
+    syncOwnVideosField();
+
+    setStatus(`Imported ${result.videos.length} public videos from ${result.channelId}`);
+  } catch (error) {
+    setPublicImportStatus(
+      error instanceof Error ? error.message : "Public channel import failed",
+      "error"
+    );
+    setStatus(error instanceof Error ? error.message : "Public channel import failed");
+  } finally {
+    if (importPublicChannelButton) {
+      importPublicChannelButton.disabled = false;
+    }
   }
 });
 

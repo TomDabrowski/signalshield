@@ -27,12 +27,14 @@ export interface FilterRules {
 export interface ContentCandidate {
   surface: ContentSurface;
   channelId?: string;
+  pageChannelSignals?: string[];
   channelName?: string;
   title?: string;
   query?: string;
   url?: string;
   channelUrl?: string;
   videoId?: string;
+  sourceConfidence?: "high" | "medium" | "low";
 }
 
 export interface EvaluationResult {
@@ -182,6 +184,7 @@ export const evaluateCandidate = (
 ): EvaluationResult => {
   const reasons: string[] = [];
   const channelId = candidate.channelId ?? "";
+  const pageChannelSignals = candidate.pageChannelSignals ?? [];
   const normalizedTitle = normalize(candidate.title);
   const normalizedChannel = normalize(candidate.channelName);
   const ownChannels = new Set([...(rules.ownChannels ?? []), ...(rules.allowChannels ?? [])]);
@@ -189,6 +192,13 @@ export const evaluateCandidate = (
   const matchedException = (rules.exceptions ?? []).find((exception) =>
     matchesException(candidate, exception)
   );
+
+  if (pageChannelSignals.some((signal) => ownChannels.has(signal))) {
+    return {
+      action: "allow",
+      reasons: ["own or allowed channel page"]
+    };
+  }
 
   if (ownChannels.has(channelId)) {
     return {
@@ -220,6 +230,21 @@ export const evaluateCandidate = (
 
   const matchedOwnVideo = findMatchingOwnVideo(candidate, rules.ownVideos ?? []);
   if (matchedOwnVideo) {
+    const missingChannelSignal = !channelId;
+    const handleOnlyChannelSignal = channelId.startsWith("@");
+    const weakOwnSignal =
+      candidate.surface === "youtube" &&
+      (missingChannelSignal ||
+        candidate.sourceConfidence === "low" ||
+        (candidate.sourceConfidence === "medium" && handleOnlyChannelSignal));
+
+    if (weakOwnSignal) {
+      return {
+        action: "allow",
+        reasons: [`protected likely own video "${matchedOwnVideo.title}"`]
+      };
+    }
+
     if (ownChannels.has(channelId)) {
       return {
         action: "allow",

@@ -69,8 +69,21 @@ export const parseYouTubeChannelId = (url?: string): string | undefined => {
     return undefined;
   }
 
+  const trimmed = url.trim();
+  if (!trimmed) {
+    return undefined;
+  }
+
+  if (/^UC[A-Za-z0-9_-]+$/.test(trimmed)) {
+    return trimmed;
+  }
+
+  if (/^@[^/?\s]+$/.test(trimmed)) {
+    return trimmed.toLowerCase();
+  }
+
   try {
-    const parsed = new URL(url, "https://www.youtube.com");
+    const parsed = new URL(trimmed, "https://www.youtube.com");
     const channelMatch = parsed.pathname.match(/^\/channel\/([^/?]+)/);
     if (channelMatch?.[1]) {
       return channelMatch[1];
@@ -90,4 +103,37 @@ export const parseYouTubeChannelId = (url?: string): string | undefined => {
   } catch {
     return undefined;
   }
+};
+
+export const extractYouTubeChannelIdFromText = (value?: string): string | undefined => {
+  if (!value) {
+    return undefined;
+  }
+
+  const patterns = [
+    /"ownerExternalChannelId":"(UC[A-Za-z0-9_-]+)"/,
+    /"channelMetadataRenderer":\{"externalId":"(UC[A-Za-z0-9_-]+)"/,
+    /"externalId":"(UC[A-Za-z0-9_-]+)"/,
+    /"channelId":"(UC[A-Za-z0-9_-]+)"/,
+    /https:\/\/www\.youtube\.com\/channel\/(UC[A-Za-z0-9_-]+)/
+  ];
+
+  for (const pattern of patterns) {
+    const match = value.match(pattern);
+    if (match?.[1]) {
+      return match[1];
+    }
+  }
+
+  return parseYouTubeChannelId(value);
+};
+
+export const isYouTubeChannelPath = (path?: string): boolean => {
+  if (!path) {
+    return false;
+  }
+
+  return /^\/(?:@[^/?]+|channel\/[^/?]+|user\/[^/?]+|c\/[^/?]+)(?:\/(?:featured|videos|shorts|streams|playlists|community|about|releases))?\/?$/.test(
+    path
+  );
 };

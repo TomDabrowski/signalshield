@@ -3,7 +3,9 @@ import assert from "node:assert/strict";
 
 import {
   cleanSearchQuery,
+  extractYouTubeChannelIdFromText,
   extractGoogleTargetUrl,
+  isYouTubeChannelPath,
   looksLikeYouTubeUrl,
   parseYouTubeChannelId,
   parseYouTubeVideoId
@@ -44,4 +46,30 @@ test("extracts channel ids and handles", () => {
     "UC123456789"
   );
   assert.equal(parseYouTubeChannelId("https://www.youtube.com/@myhandle"), "@myhandle");
+  assert.equal(parseYouTubeChannelId("UC123456789"), "UC123456789");
+  assert.equal(parseYouTubeChannelId("@MyHandle"), "@myhandle");
+});
+
+test("extracts channel ids from embedded youtube page data", () => {
+  assert.equal(
+    extractYouTubeChannelIdFromText('{"externalId":"UCabc123XYZ","title":"Example Artist"}'),
+    "UCabc123XYZ"
+  );
+  assert.equal(
+    extractYouTubeChannelIdFromText('{"ownerExternalChannelId":"UCdef456XYZ","tab":"videos"}'),
+    "UCdef456XYZ"
+  );
+  assert.equal(
+    extractYouTubeChannelIdFromText(
+      '{"channelMetadataRenderer":{"externalId":"UCghi789XYZ","title":"Example Artist"}}'
+    ),
+    "UCghi789XYZ"
+  );
+});
+
+test("recognizes youtube channel paths", () => {
+  assert.equal(isYouTubeChannelPath("/@exampleartist/videos"), true);
+  assert.equal(isYouTubeChannelPath("/channel/UC123456789/videos"), true);
+  assert.equal(isYouTubeChannelPath("/watch"), false);
+  assert.equal(isYouTubeChannelPath("/results"), false);
 });
